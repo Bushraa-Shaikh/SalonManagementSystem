@@ -1,129 +1,154 @@
-create database salonmanagementsystem
+CREATE DATABASE salonmanagementsystem
 
-use salonmanagementsystem
+USE salonmanagementsystem
 
-create table users(
-UserID int primary key not null,
-UserRole varchar(50),
-UserPassword varchar(50) not null)
+-- USERS
+CREATE TABLE users(
+UserID INT IDENTITY(1,1) PRIMARY KEY,
+UserRole VARCHAR(50),
+UserPassword VARCHAR(50) NOT NULL
+)
 
+-- ACTIVE STATUS
+CREATE TABLE activestatus(
+StatusId INT IDENTITY(1,1) PRIMARY KEY,
+StatusType VARCHAR(50)
+)
 
-create table clients(
-ClientId int primary key not null,
-ClientName varchar(50) not null,
-ClientPhone varchar(50) not null)
+-- CLIENTS
+CREATE TABLE clients(
+ClientId INT IDENTITY(1,1) PRIMARY KEY,
+ClientName VARCHAR(50) NOT NULL,
+ClientPhone VARCHAR(50) NOT NULL
+)
 
+-- STAFF
+CREATE TABLE staff(
+StaffId INT IDENTITY(1,1) PRIMARY KEY,
+UsId INT NOT NULL,
+StaffName VARCHAR(50) NOT NULL,
+StaffPhone VARCHAR(50) NOT NULL,
+StaffEmail VARCHAR(50),
+StaffAddress VARCHAR(50),
+JoiningDate DATE,
+StaffSalary DECIMAL(10,2),
+StaffSpecialilty VARCHAR(50),
+StaffStatus INT NOT NULL,
 
-create table activestatus(
-StatusId int primary key not null,
-StatusType varchar(50) )
+FOREIGN KEY(StaffStatus) REFERENCES activestatus(StatusId),
+FOREIGN KEY(UsId) REFERENCES users(UserId)
+)
 
+-- APPOINTMENTS
+CREATE TABLE appointments(
+AppId INT IDENTITY(1,1) PRIMARY KEY,
+CId INT NOT NULL,
+App_Booked_For INT NOT NULL,
+AppTime TIME NOT NULL,
+AppDate DATE NOT NULL,
+AppStatus INT NOT NULL,
+App_Booked_By INT NOT NULL,
 
-create table staff(
-StaffId int primary key not null,
-UsId int not null,
-StaffName varchar(50) not null,
-StaffPhone varchar(50) not null,
-StaffEmail varchar(50),
-StaffAddress varchar(50),
-JoiningDate Date,
-StaffSalary decimal(10,2),
-StaffSpecialilty varchar(50),
-StaffStatus int not null,
-foreign key(StaffStatus) references activestatus(StatusId),
-FOREIGN KEY (UsId) REFERENCES users(UserId) )
+FOREIGN KEY(AppStatus) REFERENCES activestatus(StatusId),
+FOREIGN KEY(CId) REFERENCES clients(ClientId),
+FOREIGN KEY(App_Booked_For) REFERENCES staff(StaffId),
+FOREIGN KEY(App_Booked_By) REFERENCES staff(StaffId)
+)
 
+-- SERVICES
+CREATE TABLE salonservices(
+ServiceId INT IDENTITY(1,1) PRIMARY KEY,
+ServiceName VARCHAR(50) NOT NULL,
+ServicePrice DECIMAL(10,2),
+ServiceTime TIME,
+ServiceStatus INT NOT NULL,
 
-create table appointments(
-AppId int primary key not null,
-CId int not null,
-App_Booked_For int not null,
-AppTime time not null,
-AppDate date not null,
-AppStatus int not null,
-App_Booked_By int not null,
-foreign key(AppStatus) references activestatus(StatusId),
-FOREIGN KEY (CId) REFERENCES clients(ClientId),
-foreign key(App_Booked_For) references staff(StaffId),
-foreign key(App_Booked_By) references staff(StaffId)   )
+FOREIGN KEY(ServiceStatus) REFERENCES activestatus(StatusId)
+)
 
+-- PAYMENT METHODS
+CREATE TABLE paymentmethods(
+methodId INT IDENTITY(1,1) PRIMARY KEY,
+methodType VARCHAR(50)
+)
 
-create table salonservices(
-ServiceId int primary key not null,
-ServiceName varchar(50) not null,
-ServicePrice decimal(10,2),
-ServiceTime Time,
-ServiceStatus int not null,
-foreign key(ServiceStatus) references activestatus(StatusId)  )
+-- BILLS
+CREATE TABLE bills(
+BillId INT IDENTITY(1,1) PRIMARY KEY,
+AppointId INT NULL,
+ClId INT NOT NULL,
+BillDate DATE DEFAULT GETDATE(),
+TotalAmount DECIMAL(10,2),
+PayId INT NOT NULL,
 
+FOREIGN KEY(PayId) REFERENCES paymentmethods(methodId),
+FOREIGN KEY(ClId) REFERENCES clients(ClientId),
+FOREIGN KEY(AppointId) REFERENCES appointments(AppId)
+)
 
-create table paymentmethods(
-methodId int primary key not null,
-methodType varchar(50)  )
+-- BILL DETAILS
+CREATE TABLE billdetails(
+BillDetailId INT IDENTITY(1,1) PRIMARY KEY,
+BId INT NOT NULL,
+ServId INT NOT NULL,
+BDPrice DECIMAL(10,2),
 
+FOREIGN KEY(BId) REFERENCES bills(BillId),
+FOREIGN KEY(ServId) REFERENCES salonservices(ServiceId)
+)
 
-create table bills(
-BillId int primary key not null,
-AppointId int  null,
-ClId int not null,
-BillDate Date,
-TotalAmount decimal(10,2),
-PayId int not null,
-foreign key(PayId) references paymentmethods(methodId),
-FOREIGN KEY (ClId) REFERENCES clients(ClientId),
-FOREIGN KEY (AppointId) REFERENCES appointments(AppId)  )
+-- BRANDS
+CREATE TABLE brands(
+BrandId INT IDENTITY(1,1) PRIMARY KEY,
+BrandName VARCHAR(50) NOT NULL,
+BrandContact VARCHAR(50) NOT NULL,
+BrandStatus INT NOT NULL,
 
+FOREIGN KEY(BrandStatus) REFERENCES activestatus(StatusId)
+)
 
-create table billdetails(
-BillDetailId int primary key not null,
-BId int not null,
-ServId int not null,
-BDPrice decimal(10,2),
-foreign key(BId) references bills(BillId),
-foreign key(ServId) references salonservices(ServiceId)  )
+-- PRODUCTS
+CREATE TABLE products(
+ProductId INT IDENTITY(1,1) PRIMARY KEY,
+ProductName VARCHAR(50) NOT NULL,
+BrId INT,
+ProductQuantity INT NOT NULL,
+CostPrice DECIMAL(10,2),
+SellingPrice DECIMAL(10,2),
+ProStatus INT NOT NULL,
 
-create table brands(
-BrandId int primary key not null,
-BrandName varchar(50) not null,		
-BrandContact varchar(50) not null,
-BrandStatus int not null,
-foreign key(BrandStatus) references activestatus(StatusId)  )
+FOREIGN KEY(ProStatus) REFERENCES activestatus(StatusId),
+FOREIGN KEY(BrId) REFERENCES brands(BrandId)
+)
 
+-- INVENTORY TRANSACTIONS
+CREATE TABLE inventorytransactions(
+TransactionId INT IDENTITY(1,1) PRIMARY KEY,
+ProId INT NOT NULL,
+TransactionType VARCHAR(50) NOT NULL,
+InventoryQuantity INT,
+InventoryDate DATE DEFAULT GETDATE(),
 
-create table products(
-ProductId int primary key not null,
-ProductName varchar(50) not null,
-BrId int,
-ProductQuantity int not null,
-CostPrice decimal(10,2),
-SellingPrice decimal(10,2),
-ProStatus int not null,
-foreign key(ProStatus) references activestatus(StatusId),
-foreign key(BrId) references brands(BrandId)  )
+FOREIGN KEY(ProId) REFERENCES products(ProductId)
+)
 
+-- SERVICE PRODUCTS
+CREATE TABLE serviceproducts(
+SerProId INT IDENTITY(1,1) PRIMARY KEY,
+SerId INT NOT NULL,
+PId INT NOT NULL,
+SPQuantityUsed INT,
 
-create table inventorytransactions(
-TransactionId int primary key not null,
-ProId int not null,
-TransactionType varchar(50) not null,
-InventoryQuantity int,
-InventoryDate date,
-foreign key(ProId) references products(ProductId)  )
+FOREIGN KEY(SerId) REFERENCES salonservices(ServiceId),
+FOREIGN KEY(PId) REFERENCES products(ProductId)
+)
 
+-- APPOINTMENT SERVICES
+CREATE TABLE appointmentservices(
+AppsId INT IDENTITY(1,1) PRIMARY KEY,
+ApId INT NOT NULL,
+SeId INT NOT NULL,
 
-create table serviceproducts(
-SerProId int primary key not null,
-SerId int not null,
-PId int not null,
-SPQuantityUsed int,
-foreign key(SerId) references salonservices(ServiceId),
-foreign key(PId) references products(ProductId)  )
-
-
-
-create table appointmentservices(
-AppsId int primary key not null,
-ApId int not null,
-SeId int not null,
-foreign key(SeId) references salonservices(ServiceId),
-FOREIGN KEY (ApId) REFERENCES appointments(AppId)  )
+FOREIGN KEY(SeId) REFERENCES salonservices(ServiceId),
+FOREIGN KEY(ApId) REFERENCES appointments(AppId)
+)
